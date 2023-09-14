@@ -2,9 +2,9 @@ apiVersion: scaffolder.backstage.io/v1beta3
 # https://backstage.io/docs/features/software-catalog/descriptor-format#kind-template
 kind: Template
 metadata:
-  name: dotnet6API-containerApp-2x-github
-  title: .Net 6 API Container Template 2x GitHub
-  description: A .Net 6 API container app to be created in GitHub
+  name: test-backstage-github-template
+  title: Test GitHub Backstage Template
+  description: Test GitHub template functionality
   tags: [
     'dotnet'
   ]
