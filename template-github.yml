@@ -1,0 +1,135 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-template
+kind: Template
+metadata:
+  name: dotnet6API-containerApp-2x-github
+  title: .Net 6 API Container Template 2x GitHub
+  description: A .Net 6 API container app to be created in GitHub
+  tags: [
+    'dotnet'
+  ]
+spec:
+  owner: Progressive
+  type: service
+
+  # These parameters are used to generate the input form in the frontend, and are
+  # used to gather input data for the execution of the template.
+  parameters:
+    - title: App Title and Description
+      required:
+        - name
+        - owner
+        - token
+      properties:
+        name:
+          title: App Name
+          type: string
+          description: Application name - must be lowercase + dashes, short names are better
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+        description:
+          title: Description
+          type: string
+          description: Description of your application
+        owner:
+          title: Owner
+          type: string
+          description: Owner of the project
+        token:
+          title: GitHub PAT
+          type: string
+          ui:widget: password
+    - title: App Information
+      required:
+        - bapName
+      properties:
+        bapName:
+          title: BAP Name
+          type: string
+          description: Edit to your tech app name (from the BAP)
+        bapSubName:
+          title: BAP Sub Name
+          type: string
+          description: (Optional) If your techapp has multiple components, BAP Sub Name can differentiate them with your own made-up value
+    - title: Options
+      # required:
+      properties:
+        isProgcloud:
+          title: Is your pipeline going to be in progcloud
+          type: boolean
+        isHostedAWS:
+          title: Will your app be hosted in AWS
+          type: boolean
+        azdoPool:
+          title: Agent Pool
+          type: string
+          description: Please select the agent pool to be used
+          default: On Premises Dynamic Pool
+          enum:
+            - On Premises Dynamic Pool
+            - On Premises Large Dynamic Pool
+            - On Premises Preview Pool
+    - title: Choose a location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+            allowedOwners:
+              - A153510
+              - Progressive
+
+  # These steps are executed in the scaffolder backend, using data that we gathered
+  # via the parameters above.
+  steps:
+    # Each step executes an action, in this case one templates files into the working directory.
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./repo
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ parameters.owner }}
+          bapName: ${{ parameters.bapName }}
+          bapSubName: ${{ parameters.bapSubName }}
+          isProgcloud: ${{ parameters.isProgcloud }}
+          isHostedAWS: ${{ parameters.isHostedAWS }}
+          azdoPool: ${{ parameters.azdoPool }}
+
+    # This step publishes the contents of the working directory to GitHub.
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        description: This is ${{ parameters.name }}
+        defaultBranch: main
+        gitAuthorName: Backstage
+        token: ${{ parameters.token }}
+
+    # The final step is to register our new component in the catalog.
+    # - id: register
+    #   name: Register
+    #   action: catalog:register
+    #   input:
+    #     repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+    #     catalogInfoPath: '/catalog-info.yaml'
+
+  # Outputs are displayed to the user after a successful execution of the template.
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      # - title: Pipeline
+      #   url: ${{ steps.createAzurePipeline.output.pipelineUrl }}
+      # - title: Open in catalog
+      #   icon: catalog
+      #   entityRef: ${{ steps.register.output.entityRef }}
